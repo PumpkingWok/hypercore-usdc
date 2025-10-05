@@ -17,5 +17,5 @@ tab_width = 4
 
 [rpc_endpoints]
 
-hyperliquid = "https://rpc.hyperliquid.xyz/evm"
+hyperliquid_mainnet = "https://rpc.hyperliquid.xyz/evm"
 local = "http://localhost:8545"

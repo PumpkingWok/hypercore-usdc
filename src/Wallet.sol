@@ -5,50 +5,71 @@ import {Initializable} from "openzeppelin-upgradeable/proxy/utils/Initializable.
 import {IntraBlockTokenTracking} from "./IntraBlockTokenTracking.sol";
 import {IHyperCoreToken} from "./interfaces/IHyperCoreToken.sol";
 
+/// @dev Wallet used to mint coreToken at evm, transferring spot usdc to coreToken's address at spot
 contract Wallet is Initializable, IntraBlockTokenTracking {
-  /// @dev Core token
-  IHyperCoreToken public immutable coreToken;
-  address public owner;
+    /// @dev Core token
+    address public immutable coreToken;
 
-  /// @dev 
-  error NotEnoughAmount();
+    /// @dev Wallet owner (immutable)
+    address public owner;
 
-  /// @dev OnlyOwner
-  error OnlyOwner();
+    /// @dev catched when the spot usdc balance is not enough
+    error NotEnoughAmount();
 
-  constructor(address coreToken_) {
-    coreToken = IHyperCoreToken(coreToken_);
-  }
+    /// @dev cathed for auth error
+    error OnlyOwner();
 
-  function initialize(address owner_) external initializer {
-    owner = owner_;
-  }
+    constructor(address coreToken_) {
+        coreToken = coreToken_;
+    }
 
-  // Deposit to subAccounts
-  // amount in 8 decimals
-  /** 
-   * @param user user to mint token for
-   * @param amount amount to mint
-   */
-  function mintToken(address user, uint64 amount) external onlyOwner {
-    // check if there is enough balance at core
-    uint64 balance = _getBalance();
-    if (amount > balance) revert NotEnoughAmount();
+    function initialize(address owner_) external initializer {
+        owner = owner_;
+    }
 
-    _spotSend(amount, user);
+    /**
+     * @notice Mint token to the owner
+     * @param amount amount to mint
+     */
+    function mintToken(uint64 amount) external {
+        _mintToken(owner, amount);
+    }
 
-    // mint HCUSD at evm
-    coreToken.mint(user, amount);
-  }
+    /**
+     * @notice Mint token to the user
+     * @param to address to mint the token
+     * @param amount amount to mint
+     */
+    function mintToken(address to, uint64 amount) external {
+        _mintToken(to, amount);
+    }
 
-  // Withdraw USDC from wallet
-  // amount in 8 decimals
-  function withdraw(uint64 amount, address recipient) external onlyOwner {
-    _spotSend(amount, recipient);
-  }
+    /**
+     * @param to user to mint the token
+     * @param amount amount to mint
+     */
+    function _mintToken(address to, uint64 amount) internal onlyOwner {
+        // check if there is enough balance at core
+        uint64 balance = _getBalance();
+        if (amount > balance) revert NotEnoughAmount();
 
-  modifier onlyOwner() {
-    if (msg.sender != owner) revert OnlyOwner();
-    _;
-  }
+        _spotSend(amount, coreToken);
+
+        // mint HCUSD at evm
+        IHyperCoreToken(coreToken).mint(to, amount);
+    }
+
+    /**
+     * @notice Withdraw USDC from wallet
+     * @param amount amount to mint (8 decimals)
+     * @param to address to receive the token
+     */
+    function withdraw(uint64 amount, address to) external onlyOwner {
+        _spotSend(amount, to);
+    }
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert OnlyOwner();
+        _;
+    }
 }
