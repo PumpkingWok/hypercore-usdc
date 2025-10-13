@@ -28,8 +28,13 @@ contract WalletTest is BaseTest {
         _setCore();
     }
 
-    function testCreateWallet() external {
+    function testDeploy() external {
         assertEq(wallet.owner(), user);
+
+        assertEq(factory.isWallet(address(wallet)), true);
+
+        assertEq(address(hcUsdc.walletFactory()), address(factory));
+        assertEq(hcUsdc.decimals(), 8);
     }
 
     function testMint() external {
@@ -38,8 +43,7 @@ contract WalletTest is BaseTest {
         uint256 balanceBefore = hcUsdc.balanceOf(user);
         assertEq(balanceBefore, 0);
 
-        vm.prank(user);
-        wallet.mintToken(amountToMint);
+        _mintToken(amountToMint);
 
         uint256 balanceAfter = hcUsdc.balanceOf(user);
         assertEq(balanceAfter - balanceBefore, amountToMint);
@@ -48,11 +52,20 @@ contract WalletTest is BaseTest {
     function testMintBurnSameBlock() external {
         uint64 amount = 1e8;
 
-        vm.startPrank(user);
-        wallet.mintToken(amount);
+        _mintToken(amount);
+
+        coreUserExistsPrecompile.setCoreUserExists(user, true);
+        vm.prank(user);
         hcUsdc.burn(amount, user);
 
         assertEq(hcUsdc.balanceOf(user), 0);
+    }
+
+    function testBurnReceiverNotEnabled() external {}
+
+    function _mintToken(uint64 amount) internal {
+        vm.prank(user);
+        wallet.mintToken(amount);
     }
 
     function _setCore() internal {
