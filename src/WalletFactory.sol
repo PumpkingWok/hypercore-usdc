@@ -24,12 +24,12 @@ contract WalletFactory {
     }
 
     /**
-     * @notice Creates a new Wallet for a user
-     * @dev Deploys a new proxy wallet, initializing it
+     * @notice Create a new Wallet for a user
+     * @dev Deploy a new proxy wallet, initializing it
      * @return wallet The address of the newly created wallet
      */
     function createWallet(address user) external returns (address wallet) {
-        // deploy a new account contract
+        // deploy a new wallet
         wallet = Clones.clone(WALLET);
         Wallet(wallet).initialize(user);
 

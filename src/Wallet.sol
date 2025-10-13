@@ -14,21 +14,31 @@ contract Wallet is Initializable, IntraBlockTokenTracking {
     address public owner;
 
     /// @dev catched when the spot usdc balance is not enough
-    error NotEnoughAmount();
+    error W_NotEnoughAmount();
 
     /// @dev cathed for auth error
-    error OnlyOwner();
+    error W_OnlyOwner();
+
+    /// @dev emitted at mint
+    event Mint(address to, uint64 amount);
+
+    /// @dev emitted when a user withdraw
+    event Withdraw(address to, uint64 amount);
 
     constructor(address coreToken_) {
         coreToken = coreToken_;
     }
 
+    /**
+     * @notice Initialize function
+     * @param owner_ Wallet owner
+     */
     function initialize(address owner_) external initializer {
         owner = owner_;
     }
 
     /**
-     * @notice Mint token to the owner
+     * @notice Mint token to the wallet's owner
      * @param amount amount to mint
      */
     function mintToken(uint64 amount) external {
@@ -37,7 +47,7 @@ contract Wallet is Initializable, IntraBlockTokenTracking {
 
     /**
      * @notice Mint token to the user
-     * @param to address to mint the token
+     * @param to address to mint the token for
      * @param amount amount to mint
      */
     function mintToken(address to, uint64 amount) external {
@@ -45,31 +55,36 @@ contract Wallet is Initializable, IntraBlockTokenTracking {
     }
 
     /**
-     * @param to user to mint the token
+     * @param to user to mint the token for
      * @param amount amount to mint
      */
     function _mintToken(address to, uint64 amount) internal onlyOwner {
         // check if there is enough balance at core
         uint64 balance = _getBalance();
-        if (amount > balance) revert NotEnoughAmount();
+        if (amount > balance) revert W_NotEnoughAmount();
 
-        _spotSend(amount, coreToken);
+        // transfer token to coreToken address at core
+        _spotSend(coreToken, amount);
 
-        // mint HCUSD at evm
+        // mint token at evm
         IHyperCoreToken(coreToken).mint(to, amount);
+
+        emit Mint(to, amount);
     }
 
     /**
      * @notice Withdraw USDC from wallet
-     * @param amount amount to mint (8 decimals)
+     * @param amount amount to withdraw (8 decimals)
      * @param to address to receive the token
      */
-    function withdraw(uint64 amount, address to) external onlyOwner {
-        _spotSend(amount, to);
+    function withdraw(address to, uint64 amount) external onlyOwner {
+        _spotSend(to, amount);
+
+        emit Withdraw(to, amount);
     }
 
     modifier onlyOwner() {
-        if (msg.sender != owner) revert OnlyOwner();
+        if (msg.sender != owner) revert W_OnlyOwner();
         _;
     }
 }
