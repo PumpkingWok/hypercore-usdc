@@ -42,7 +42,7 @@ contract WalletTest is BaseTest {
 
         uint256 balanceBefore = hcUsdc.balanceOf(user);
         assertEq(balanceBefore, 0);
-    
+
         _mintToken(amountToMint);
 
         uint256 balanceAfter = hcUsdc.balanceOf(user);
