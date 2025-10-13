@@ -8,7 +8,7 @@ import {IHyperCoreToken} from "./interfaces/IHyperCoreToken.sol";
 /// @dev Wallet used to mint coreToken at evm, transferring spot usdc to coreToken's address at spot
 contract Wallet is Initializable, IntraBlockTokenTracking {
     /// @dev Core token
-    address public immutable coreToken;
+    address public immutable CORE_TOKEN;
 
     /// @dev Wallet owner (immutable)
     address public owner;
@@ -20,13 +20,13 @@ contract Wallet is Initializable, IntraBlockTokenTracking {
     error W_OnlyOwner();
 
     /// @dev emitted at mint
-    event Mint(address to, uint64 amount);
+    event Mint(address indexed to, uint64 amount);
 
     /// @dev emitted when a user withdraw
-    event Withdraw(address to, uint64 amount);
+    event Withdraw(address indexed to, uint64 amount);
 
     constructor(address coreToken_) {
-        coreToken = coreToken_;
+        CORE_TOKEN = coreToken_;
     }
 
     /**
@@ -59,15 +59,12 @@ contract Wallet is Initializable, IntraBlockTokenTracking {
      * @param amount amount to mint
      */
     function _mintToken(address to, uint64 amount) internal onlyOwner {
-        // check if there is enough balance at core
-        uint64 balance = _getBalance();
-        if (amount > balance) revert W_NotEnoughAmount();
-
         // transfer token to coreToken address at core
-        _spotSend(coreToken, amount);
+        // assume core token is enabled at core
+        _spotSend(CORE_TOKEN, amount);
 
         // mint token at evm
-        IHyperCoreToken(coreToken).mint(to, amount);
+        IHyperCoreToken(CORE_TOKEN).mint(to, amount);
 
         emit Mint(to, amount);
     }

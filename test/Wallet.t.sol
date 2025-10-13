@@ -1,8 +1,6 @@
 // SPDX-License-Identifier:  MIT
 pragma solidity ^0.8.18;
 
-import {HLConstants} from "hyper-evm-lib/common/HLConstants.sol";
-
 import {BaseTest} from "./BaseTest.t.sol";
 import {Wallet} from "src/Wallet.sol";
 import {WalletFactory} from "src/WalletFactory.sol";
@@ -23,7 +21,7 @@ contract WalletTest is BaseTest {
         // deploy factory
         factory = new WalletFactory();
         wallet = Wallet(factory.createWallet(user));
-        hcUsdc = HyperCoreToken(wallet.coreToken());
+        hcUsdc = HyperCoreToken(wallet.CORE_TOKEN());
 
         _setCore();
     }
@@ -33,7 +31,7 @@ contract WalletTest is BaseTest {
 
         assertEq(factory.isWallet(address(wallet)), true);
 
-        assertEq(address(hcUsdc.walletFactory()), address(factory));
+        assertEq(address(hcUsdc.WALLET_FACTORY()), address(factory));
         assertEq(hcUsdc.decimals(), 8);
     }
 

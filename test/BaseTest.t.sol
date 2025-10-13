@@ -7,7 +7,6 @@ import {MockSpotBalance} from "./mocks/MockSpotBalance.sol";
 import {MockCoreUserExists} from "./mocks/MockCoreUserExists.sol";
 
 import {HLConstants} from "hyper-evm-lib/common/HLConstants.sol";
-//import {CoreWriterLib} from "hyper-evm-lib/CoreWriterLib.sol";
 
 abstract contract BaseTest is Test {
     MockSpotBalance internal spotBalancePrecompile;

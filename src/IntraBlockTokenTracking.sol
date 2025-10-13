@@ -11,28 +11,35 @@ abstract contract IntraBlockTokenTracking {
     /// @dev last block interaction
     uint256 lastUsedBlock;
 
-    /// @dev trowed at invalid amount
-    error IBTT_InvalidAmount();
-
     /// @dev throwed if the balance is not enough
     error IBTT_InsufficientBalance();
 
     /// @dev throwed when tries to send zero amount
     error IBTT_ZeroAmount();
 
-    function getBalance() external view returns (uint64) {
-        return _getBalance();
+    /**
+     * @notice Get the available balance at the current block state
+     */
+    function getAvailableBalance() external view returns (uint64) {
+        return _getAvailableBalance();
     }
 
-    function _getBalance() internal view returns (uint64 balance) {
+    /**
+     * @notice Get the available balance at the current block state
+     */
+    function _getAvailableBalance() internal view returns (uint64 balance) {
         PrecompileLib.SpotBalance memory spotBalance = PrecompileLib.spotBalance(address(this), 0);
         uint64 total = spotBalance.total;
         uint64 usedAmount = _getUsedAmount();
 
-        if (usedAmount > total) return 0;
+        // total can't be > usedAmount
+        // check on that in the _spotSend()
         return total - usedAmount;
     }
 
+    /**
+     * @notice Add amount used in the current block
+     */
     function _addUsedAmount(uint64 amount) internal {
         if (lastUsedBlock != block.number) {
             usedTokenAmounts = amount;
@@ -42,6 +49,9 @@ abstract contract IntraBlockTokenTracking {
         }
     }
 
+    /**
+     * @notice Get used amount
+     */
     function _getUsedAmount() internal view returns (uint64) {
         return lastUsedBlock == block.number ? usedTokenAmounts : 0;
     }
@@ -54,17 +64,14 @@ abstract contract IntraBlockTokenTracking {
     function _spotSend(address to, uint64 amount) internal {
         if (amount == 0) revert IBTT_ZeroAmount();
 
-        bool activated;
-        uint64 balance = _getBalance();
-
-        if (PrecompileLib.coreUserExists(to)) {
-            activated = true;
-        }
-
+        // enabler fees not included
         CoreWriterLib.spotSend(to, 0, amount);
 
+        // get the balance - used amount in the same block
+        uint64 balance = _getAvailableBalance();
+
         // add 1USDC as fee to enable the recipient at core spot
-        amount = activated ? amount : amount + 1e8;
+        amount = PrecompileLib.coreUserExists(to) ? amount : amount + 1e8;
 
         if (amount > balance) revert IBTT_InsufficientBalance();
 

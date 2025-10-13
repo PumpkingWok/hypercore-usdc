@@ -11,7 +11,7 @@ import {PrecompileLib} from "hyper-evm-lib/PrecompileLib.sol";
 /// On burning side, any token holder can call it to burn them at 1:1 rate, the same amount will be receive at core
 contract HyperCoreToken is ERC20("HyperCoreUSDC", "HCUSDC") {
     /// @dev Wallet factory
-    IWalletFactory public immutable walletFactory;
+    IWalletFactory public immutable WALLET_FACTORY;
 
     /// @dev Core enabler fee (1 USDC)
     uint64 public constant ENABLER_FEE = 1e8;
@@ -26,7 +26,7 @@ contract HyperCoreToken is ERC20("HyperCoreUSDC", "HCUSDC") {
     error HCT_ReceiverNotEnabled();
 
     constructor(address walletFactory_) {
-        walletFactory = IWalletFactory(walletFactory_);
+        WALLET_FACTORY = IWalletFactory(walletFactory_);
     }
 
     /**
@@ -66,7 +66,7 @@ contract HyperCoreToken is ERC20("HyperCoreUSDC", "HCUSDC") {
     }
 
     modifier onlyWallet() {
-        if (!walletFactory.isWallet(msg.sender)) revert HCT_OnlyWallet();
+        if (!WALLET_FACTORY.isWallet(msg.sender)) revert HCT_OnlyWallet();
         _;
     }
 }
