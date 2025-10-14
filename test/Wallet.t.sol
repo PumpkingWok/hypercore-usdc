@@ -41,10 +41,14 @@ contract WalletTest is BaseTest {
         uint256 balanceBefore = hcUsdc.balanceOf(user);
         assertEq(balanceBefore, 0);
 
+        assertEq(wallet.lastUsedBlock(), 0);
+
         _mintToken(amountToMint);
 
         uint256 balanceAfter = hcUsdc.balanceOf(user);
         assertEq(balanceAfter - balanceBefore, amountToMint);
+
+        assertEq(wallet.lastUsedBlock(), block.number);
     }
 
     function testMintBurnSameBlock() external {
@@ -57,6 +61,14 @@ contract WalletTest is BaseTest {
         hcUsdc.burn(amount, user);
 
         assertEq(hcUsdc.balanceOf(user), 0);
+        assertEq(hcUsdc.totalSupply(), 0);
+    }
+
+    function testTwoMintSameBlock() external {
+        _mintToken(spotBalanceOnCore / 2);
+
+        vm.expectRevert(Wallet.W_OneActionPerBlock.selector);
+        _mintToken(spotBalanceOnCore / 2);
     }
 
     function testBurnReceiverNotEnabled() external {}

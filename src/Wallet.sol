@@ -2,22 +2,33 @@
 pragma solidity ^0.8.18;
 
 import {Initializable} from "openzeppelin-upgradeable/proxy/utils/Initializable.sol";
-import {IntraBlockTokenTracking} from "./IntraBlockTokenTracking.sol";
 import {IHyperCoreToken} from "./interfaces/IHyperCoreToken.sol";
 
+import {CoreWriterLib} from "hyper-evm-lib/CoreWriterLib.sol";
+import {PrecompileLib} from "hyper-evm-lib/PrecompileLib.sol";
+
 /// @dev Wallet used to mint coreToken at evm, transferring spot usdc to coreToken's address at spot
-contract Wallet is Initializable, IntraBlockTokenTracking {
+contract Wallet is Initializable {
     /// @dev Core token
     address public immutable CORE_TOKEN;
 
     /// @dev Wallet owner (immutable)
     address public owner;
 
+    /// @dev last block interaction (one action per block at most)
+    uint256 public lastUsedBlock;
+
     /// @dev catched when the spot usdc balance is not enough
-    error W_NotEnoughAmount();
+    error W_InsufficientBalance();
+
+    /// @dev throwed when exceed the one action per block
+    error W_OneActionPerBlock();
 
     /// @dev cathed for auth error
     error W_OnlyOwner();
+
+    /// @dev throwed at zero balance
+    error W_ZeroAmount();
 
     /// @dev emitted at mint
     event Mint(address indexed to, uint64 amount);
@@ -78,6 +89,27 @@ contract Wallet is Initializable, IntraBlockTokenTracking {
         _spotSend(to, amount);
 
         emit Withdraw(to, amount);
+    }
+
+    /**
+     * @notice Send spot token at core
+     * @param to destination address
+     * @param amount amount to send
+     */
+    function _spotSend(address to, uint64 amount) internal {
+        if (amount == 0) revert W_ZeroAmount();
+        if (lastUsedBlock == block.number) revert W_OneActionPerBlock();
+
+        // get the wallet spot balance
+        PrecompileLib.SpotBalance memory spotBalance = PrecompileLib.spotBalance(address(this), 0);
+        uint64 balance = spotBalance.total;
+
+        if (amount > balance) revert W_InsufficientBalance();
+
+        // enabler fees not included
+        CoreWriterLib.spotSend(to, 0, amount);
+
+        lastUsedBlock = block.number;
     }
 
     modifier onlyOwner() {
