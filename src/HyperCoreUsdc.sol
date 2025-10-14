@@ -2,14 +2,17 @@
 pragma solidity ^0.8.18;
 
 import {ERC20} from "openzeppelin/token/ERC20/ERC20.sol";
-import {IWalletFactory} from "./interfaces/IWalletFactory.sol";
+
 import {CoreWriterLib} from "hyper-evm-lib/CoreWriterLib.sol";
 import {PrecompileLib} from "hyper-evm-lib/PrecompileLib.sol";
+
+import {IWalletFactory} from "./interfaces/IWalletFactory.sol";
+import {IHyperCoreUsdc} from "./interfaces/IHyperCoreUsdc.sol";
 
 /// @notice ERC20 token representation at evm of USDC core spot
 /// Only the Wallet created via the WalletFactory can mint token, at 1:1 rate, transferring USDC to the token address at core
 /// On burning side, any token holder can call it to burn them at 1:1 rate, the same amount will be receive at core
-contract HyperCoreToken is ERC20("HyperCoreUSDC", "HCUSDC") {
+contract HyperCoreUsdc is ERC20("HyperCoreUSDC", "HCUSDC"), IHyperCoreUsdc {
     /// @dev Wallet factory
     IWalletFactory public immutable WALLET_FACTORY;
 
@@ -43,7 +46,7 @@ contract HyperCoreToken is ERC20("HyperCoreUSDC", "HCUSDC") {
      * @param amount amount to burn
      * @param coreReceiver address to receive the token at core spot
      */
-    function burn(uint64 amount, address coreReceiver) external {
+    function burn(address coreReceiver, uint64 amount) external {
         // burn the token at evm
         _burn(msg.sender, uint256(amount));
 
@@ -59,7 +62,7 @@ contract HyperCoreToken is ERC20("HyperCoreUSDC", "HCUSDC") {
     }
 
     /**
-     * @notice Token decimals 8 as usdc
+     * @notice Token decimals 8 as usdc at core
      */
     function decimals() public view override returns (uint8) {
         return 8;

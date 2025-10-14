@@ -4,11 +4,11 @@ pragma solidity ^0.8.18;
 import {BaseTest} from "./BaseTest.t.sol";
 import {Wallet} from "src/Wallet.sol";
 import {WalletFactory} from "src/WalletFactory.sol";
-import {HyperCoreToken} from "src/HyperCoreToken.sol";
+import {HyperCoreUsdc} from "src/HyperCoreUsdc.sol";
 
 contract WalletTest is BaseTest {
     WalletFactory public factory;
-    HyperCoreToken public hcUsdc;
+    HyperCoreUsdc public hcUsdc;
     Wallet public wallet;
 
     address user = address(0xABBB);
@@ -21,7 +21,7 @@ contract WalletTest is BaseTest {
         // deploy factory
         factory = new WalletFactory();
         wallet = Wallet(factory.createWallet(user));
-        hcUsdc = HyperCoreToken(wallet.CORE_TOKEN());
+        hcUsdc = HyperCoreUsdc(wallet.CORE_TOKEN());
 
         _setCore();
     }
@@ -51,6 +51,18 @@ contract WalletTest is BaseTest {
         assertEq(wallet.lastUsedBlock(), block.number);
     }
 
+    function testMintToRecipient() external {
+        address recipient = address(0xABBB);
+
+        uint256 balanceBefore = hcUsdc.balanceOf(recipient);
+
+        vm.prank(user);
+        wallet.mintToken(recipient, spotBalanceOnCore);
+
+        uint256 balanceAfter = hcUsdc.balanceOf(recipient);
+        assertEq(balanceAfter - balanceBefore, spotBalanceOnCore);
+    }
+
     function testMintBurnSameBlock() external {
         uint64 amount = 1e8;
 
@@ -58,7 +70,7 @@ contract WalletTest is BaseTest {
 
         coreUserExistsPrecompile.setCoreUserExists(user, true);
         vm.prank(user);
-        hcUsdc.burn(amount, user);
+        hcUsdc.burn(user, amount);
 
         assertEq(hcUsdc.balanceOf(user), 0);
         assertEq(hcUsdc.totalSupply(), 0);

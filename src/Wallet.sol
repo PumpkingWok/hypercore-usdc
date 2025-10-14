@@ -2,7 +2,7 @@
 pragma solidity ^0.8.18;
 
 import {Initializable} from "openzeppelin-upgradeable/proxy/utils/Initializable.sol";
-import {IHyperCoreToken} from "./interfaces/IHyperCoreToken.sol";
+import {IHyperCoreUsdc} from "./interfaces/IHyperCoreUsdc.sol";
 
 import {CoreWriterLib} from "hyper-evm-lib/CoreWriterLib.sol";
 import {PrecompileLib} from "hyper-evm-lib/PrecompileLib.sol";
@@ -75,7 +75,7 @@ contract Wallet is Initializable {
         _spotSend(CORE_TOKEN, amount);
 
         // mint token at evm
-        IHyperCoreToken(CORE_TOKEN).mint(to, amount);
+        IHyperCoreUsdc(CORE_TOKEN).mint(to, amount);
 
         emit Mint(to, amount);
     }

@@ -2,5 +2,7 @@
 pragma solidity ^0.8.18;
 
 interface IWalletFactory {
+    function createWallet(address owner) external returns (address);
+
     function isWallet(address wallet) external view returns (bool);
 }
