@@ -2,10 +2,11 @@
 pragma solidity 0.8.28;
 
 import {Initializable} from "openzeppelin-upgradeable/proxy/utils/Initializable.sol";
-import {IHyperCoreUsdc} from "./interfaces/IHyperCoreUsdc.sol";
 
 import {CoreWriterLib} from "hyper-evm-lib/CoreWriterLib.sol";
 import {PrecompileLib} from "hyper-evm-lib/PrecompileLib.sol";
+
+import {IHyperCoreUsdc} from "./interfaces/IHyperCoreUsdc.sol";
 
 /// @dev Wallet used to mint coreToken at evm, transferring spot usdc to coreToken's address at spot
 contract Wallet is Initializable {

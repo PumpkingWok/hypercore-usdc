@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin/proxy/Clones.sol";
+
 import {IWalletFactory} from "./interfaces/IWalletFactory.sol";
 
 import {HyperCoreUsdc} from "./HyperCoreUsdc.sol";
@@ -15,8 +16,14 @@ contract WalletFactory is IWalletFactory {
     /// @dev Take trace of wallets created
     mapping(address => bool) public isWallet;
 
+    /// @dev owner (immutable) => wallet
+    mapping(address => address) public wallets;
+
+    /// @dev Thrown when an owner already owns a wallet
+    error WF_OneWalletPerOwner();
+
     /// @dev Emitted when a new wallet is deployed
-    event WalletCreated(address indexed owner, address wallet);
+    event WalletCreated(address owner, address wallet);
 
     constructor() {
         // deploy the hyperCoreUsdc token and wallet impl
@@ -30,11 +37,13 @@ contract WalletFactory is IWalletFactory {
      * @return wallet address of the newly created wallet
      */
     function createWallet(address owner) external returns (address wallet) {
+        if (wallets[owner] != address(0)) revert WF_OneWalletPerOwner();
         // deploy a new wallet
         wallet = Clones.clone(WALLET);
         Wallet(wallet).initialize(owner);
 
         isWallet[wallet] = true;
+        wallets[owner] = wallet;
 
         emit WalletCreated(owner, wallet);
     }
