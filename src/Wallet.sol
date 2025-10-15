@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity 0.8.28;
 
 import {Initializable} from "openzeppelin-upgradeable/proxy/utils/Initializable.sol";
 import {IHyperCoreUsdc} from "./interfaces/IHyperCoreUsdc.sol";
@@ -15,25 +15,25 @@ contract Wallet is Initializable {
     /// @dev Wallet owner (immutable)
     address public owner;
 
-    /// @dev last block interaction (one action per block at most)
+    /// @dev Last block interaction (one action per block at most)
     uint256 public lastUsedBlock;
 
-    /// @dev catched when the spot usdc balance is not enough
+    /// @dev Thrown when the spot usdc balance is not enough
     error W_InsufficientBalance();
 
-    /// @dev throwed when exceed the one action per block
+    /// @dev Thrown when exceed the one action per block
     error W_OneActionPerBlock();
 
-    /// @dev cathed for auth error
+    /// @dev Cathed for auth error
     error W_OnlyOwner();
 
-    /// @dev throwed at zero balance
+    /// @dev Thrown at zero balance
     error W_ZeroAmount();
 
-    /// @dev emitted at mint
+    /// @dev Emitted at mint
     event Mint(address indexed to, uint64 amount);
 
-    /// @dev emitted when a user withdraw
+    /// @dev Emitted when a user withdraw
     event Withdraw(address indexed to, uint64 amount);
 
     constructor(address coreToken_) {
@@ -66,6 +66,7 @@ contract Wallet is Initializable {
     }
 
     /**
+     * @notice Mint token to the user
      * @param to user to mint the token for
      * @param amount amount to mint
      */

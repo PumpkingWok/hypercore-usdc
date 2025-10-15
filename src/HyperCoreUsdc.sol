@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity 0.8.28;
 
 import {ERC20} from "openzeppelin/token/ERC20/ERC20.sol";
 
@@ -19,14 +19,11 @@ contract HyperCoreUsdc is ERC20("HyperCoreUSDC", "HCUSDC"), IHyperCoreUsdc {
     /// @dev Core enabler fee (1 USDC)
     uint64 public constant ENABLER_FEE = 1e8;
 
-    /// @dev Throwed when the amount to send is not enough to cover enabler fee
-    error HCT_AmountLessThanFee();
+    /// @dev Thrown when the amount to send is not enough to cover enabler fee
+    error HCU_AmountLessThanFee();
 
-    /// @dev Throwed when a non wallet try to mint
-    error HCT_OnlyWallet();
-
-    /// @dev Throwed if the burning receiver is not enabled at core
-    error HCT_ReceiverNotEnabled();
+    /// @dev Thrown when a non wallet try to mint
+    error HCU_OnlyWallet();
 
     constructor(address walletFactory_) {
         WALLET_FACTORY = IWalletFactory(walletFactory_);
@@ -53,7 +50,7 @@ contract HyperCoreUsdc is ERC20("HyperCoreUSDC", "HCUSDC"), IHyperCoreUsdc {
         // edge case when an account is enabled within the same block
         // in a tx executed before it
         if (!PrecompileLib.coreUserExists(coreReceiver)) {
-            if (amount <= ENABLER_FEE) revert HCT_AmountLessThanFee();
+            if (amount <= ENABLER_FEE) revert HCU_AmountLessThanFee();
             amount -= ENABLER_FEE;
         }
 
@@ -69,7 +66,7 @@ contract HyperCoreUsdc is ERC20("HyperCoreUSDC", "HCUSDC"), IHyperCoreUsdc {
     }
 
     modifier onlyWallet() {
-        if (!WALLET_FACTORY.isWallet(msg.sender)) revert HCT_OnlyWallet();
+        if (!WALLET_FACTORY.isWallet(msg.sender)) revert HCU_OnlyWallet();
         _;
     }
 }
