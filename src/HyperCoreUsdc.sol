@@ -16,11 +16,8 @@ contract HyperCoreUsdc is ERC20("HyperCoreUSDC", "HCUSDC"), IHyperCoreUsdc {
     /// @dev Wallet factory
     IWalletFactory public immutable WALLET_FACTORY;
 
-    /// @dev Core enabler fee (1 USDC)
-    uint64 public constant ENABLER_FEE = 1e8;
-
-    /// @dev Thrown when the amount to send is not enough to cover enabler fee
-    error HCU_AmountLessThanFee();
+    /// @dev Thrown when the coreReceiver is not enabled at core yet
+    error HCU_NotEnabledAtCore();
 
     /// @dev Thrown when a non wallet try to mint
     error HCU_OnlyWallet();
@@ -47,11 +44,10 @@ contract HyperCoreUsdc is ERC20("HyperCoreUSDC", "HCUSDC"), IHyperCoreUsdc {
         // burn the token at evm
         _burn(msg.sender, uint256(amount));
 
-        // edge case when an account is enabled within the same block
-        // in a tx executed before it
+        // not allow non enabled address at core to receive token
+        // avoid enabler fees edge cases
         if (!PrecompileLib.coreUserExists(coreReceiver)) {
-            if (amount <= ENABLER_FEE) revert HCU_AmountLessThanFee();
-            amount -= ENABLER_FEE;
+            revert HCU_NotEnabledAtCore();
         }
 
         // send the same amount at core to coreReceiver

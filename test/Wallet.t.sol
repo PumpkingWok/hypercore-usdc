@@ -83,7 +83,13 @@ contract WalletTest is BaseTest {
         _mintToken(spotBalanceOnCore / 2);
     }
 
-    function testBurnReceiverNotEnabled() external {}
+    function testBurnReceiverNotEnabled() external {
+        _mintToken(spotBalanceOnCore);
+
+        vm.prank(user);
+        vm.expectRevert(HyperCoreUsdc.HCU_NotEnabledAtCore.selector);
+        hcUsdc.burn(user, spotBalanceOnCore);
+    }
 
     function _mintToken(uint64 amount) internal {
         vm.prank(user);
